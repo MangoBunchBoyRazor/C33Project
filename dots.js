@@ -2,7 +2,7 @@ class dots{
     constructor(x,y,size){
         this.radius = size;
         this.hue = 0;
-        this.body = Bodies.circle(x,y,this.radius,{isStatic: true});
+        this.body = Bodies.circle(x,y,this.radius,{isStatic: true, friction: 0});
         World.add(engine.world,this.body);
     }
     display(){

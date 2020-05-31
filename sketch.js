@@ -32,13 +32,13 @@ function setup(){
 
     //Creating the pegs
     for(i = 0; i < width; i+=50){
-        circles.push(new dots(i,100,12));
-        circles.push(new dots(i,550,12));
-        circles.push(new dots(i+25,475,12));
-        circles.push(new dots(i,400,12));
-        circles.push(new dots(i+25,325,12));
-        circles.push(new dots(i,250,12));
-        circles.push(new dots(i+25,175,12));
+        circles.push(new dots(i+12,100,12));
+        circles.push(new dots(i+12,550,12));
+        circles.push(new dots(i+37,475,12));
+        circles.push(new dots(i+12,400,12));
+        circles.push(new dots(i+37,325,12));
+        circles.push(new dots(i+12,250,12));
+        circles.push(new dots(i+37,175,12));
     }
     //The baskets for catching the balls
     for(j = 50; j < width; j+=100)
@@ -76,7 +76,7 @@ function draw(){
 
     //Generating the ball at random time
     if(!Timer)
-        Timer = round(random(25,100));
+        Timer = round(random(10,75));
     else if(timer === Timer){
         parts.push(new Particles(width/2-1,0));
         Timer = null, timer = 0;
