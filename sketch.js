@@ -10,6 +10,8 @@ const Engine = Matter.Engine,
 var engine, circles = [], ground, parts = [], baskets = [], Timer, timer, timerIncrease;
 //Images
 var pauseImg, restartImg;
+//Database
+var database;
 
 function preload(){
     //Loading all images
@@ -52,13 +54,36 @@ function setup(){
         mouse: Mouse.create(canvas.elt),
     });
     World.add(engine.world,mConstraint);
-    
-    //Renderer
-    /*let render = Render.create({
-        engine: engine,
-        element: document.body
-    });
-    Render.run(render);*/
+
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+        apiKey: "AIzaSyApgwGl_2u-ka2IL3eZkNXsET29KjGN0-4",
+        authDomain: "test-project-a08e8.firebaseapp.com",
+        databaseURL: "https://test-project-a08e8.firebaseio.com",
+        projectId: "test-project-a08e8",
+        storageBucket: "test-project-a08e8.appspot.com",
+        messagingSenderId: "952912058078",
+        appId: "1:952912058078:web:0d130d36b02162446c944f",
+        measurementId: "G-C1CN1EB073"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    database = firebase.database();
+
+    //Create button
+    let submitBtn = createButton('submit');
+    submitBtn.mouseClicked(createUserAndSubmitData);
+}
+//Function to submit data to the firebase database
+function createUserAndSubmitData(){
+    let _scores = [];
+    for(i = 0; i < baskets.length; i++)
+        _scores.push(baskets[i].circleAmt);
+    let data = {
+        name: "BlahBlah",
+        scores: _scores
+    }
+    database.ref('scores').push(data);
 }
 function draw(){
     //Background
