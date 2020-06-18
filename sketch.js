@@ -7,7 +7,7 @@ const Engine = Matter.Engine,
       MouseConstraint = Matter.MouseConstraint;
 
 //Declaring global variables      
-var engine, circles = [], ground, parts = [], baskets = [], Timer, timer, timerIncrease;
+var engine, circles = [], ground, parts = [], baskets = [], gameState = "play", turns = 0, score = 0;
 //Images
 var pauseImg, restartImg;
 //Database
@@ -46,46 +46,14 @@ function setup(){
     for(j = 50; j < width; j+=100)
         baskets.push(new Basket(j,700,100));
 
-    //Timer
-    timer = 0, Timer = null, timerIncrease = true;
-
-    //Adding mouse controls
-    mConstraint = MouseConstraint.create(engine, {
-        mouse: Mouse.create(canvas.elt),
+    let mconstraint = MouseConstraint.create(engine,{
+        mouse: Mouse.create(canvas.elt)
     });
-    World.add(engine.world,mConstraint);
-
-    // Your web app's Firebase configuration
-    var firebaseConfig = {
-        apiKey: "AIzaSyApgwGl_2u-ka2IL3eZkNXsET29KjGN0-4",
-        authDomain: "test-project-a08e8.firebaseapp.com",
-        databaseURL: "https://test-project-a08e8.firebaseio.com",
-        projectId: "test-project-a08e8",
-        storageBucket: "test-project-a08e8.appspot.com",
-        messagingSenderId: "952912058078",
-        appId: "1:952912058078:web:0d130d36b02162446c944f",
-        measurementId: "G-C1CN1EB073"
-    };
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    database = firebase.database();
-
-    //Create button
-    let submitBtn = createButton('submit');
-    submitBtn.mouseClicked(createUserAndSubmitData);
-}
-//Function to submit data to the firebase database
-function createUserAndSubmitData(){
-    let _scores = [];
-    for(i = 0; i < baskets.length; i++)
-        _scores.push(baskets[i].circleAmt);
-    let data = {
-        name: "BlahBlah",
-        scores: _scores
-    }
-    database.ref('scores').push(data);
-}
+    World.add(engine.world,mconstraint);
+}   
 function draw(){
+    score = 0;
+    getCalculatedScore();
     //Background
     push();
     colorMode(RGB);
@@ -96,39 +64,42 @@ function draw(){
     textAlign(CENTER);
     fill(circles[0].hue,100,100);
     textSize(40);
-    text("Plinko!",width/2,25);	
+    text("Plinko!",width/2,50);	
+    fill(360,100,100);
+    textSize(20);
+    textAlign(LEFT);
+    text("Score:"+score,0,50);
     pop();
-
-    //Generating the ball at random time
-    if(!Timer)
-        Timer = round(random(10,75));
-    else if(timer === Timer){
-        parts.push(new Particles(width/2-1,0));
-        Timer = null, timer = 0;
-    }
+    //Declaring game state to over if the no. of turns is 5
+    if(turns > 5)
+    gameState = "over";
 
     //Displaying all the objects
     for(n = 0; n < baskets.length; n++)
         baskets[n].circleAmt = 0;
-    for(i = 0; i < circles.length; i++)
-	    circles[i].display();
-    for(j = 0; j < parts.length; j++){
-        parts[j].display();
-        //Checking the number of circles in each basket
-        for(l = 0; l < baskets.length; l++){
-            if(baskets[l].isCircleInside(parts[j]))
-                baskets[l].circleAmt++;
-        }
+    for(i = 0; i < circles.length; i++){
+        circles[i].display();
     }
+    for(j = 0; j < parts.length; j++)
+        parts[j].display();
     for(k = 0; k < baskets.length; k++)
         baskets[k].display();
 
-    //Increasing the timer and updating the engine if game is not pause
-    if(timerIncrease){
-        timer++;
+  
+    if(gameState == "over"){
+        push();
+        textAlign(CENTER);
+        textSize(40);
+        fill(100,10,100);
+        text("Game Over",width/2,200);
+        text("Your final score:"+score,width/2,250);
+        pop();
+    }
+    //updating the engine if game is not pause
+    if(gameState == "play"){
         Engine.update(engine, 1000/60);
     }
-    else{
+    else if(gameState == "pause"){
         //Creating the pause screen when game is paused
         let canvas2 = createGraphics(width,height);
         canvas2.background(150,240);
@@ -142,24 +113,30 @@ function draw(){
     image(pauseImg,width-100,0);
     image(restartImg,width-50,0);
 
-    //Displaying the no. of circles in each basket and the total no. of circles in each basket
     push();
+    textSize(20);
     textAlign(CENTER);
-    text(baskets[0].circleAmt,baskets[0].x,75);
-    text(baskets[1].circleAmt,baskets[1].x,75);
-    text(baskets[2].circleAmt,baskets[2].x,75);
-    text(baskets[3].circleAmt,baskets[3].x,75);
-    text(baskets[4].circleAmt,baskets[4].x,75);
-    text(baskets[5].circleAmt,baskets[5].x,75);
-    text("Total Balls: "+parts.length,width/2,50);
+    for(let i = 0; i < baskets.length; i++){
+        if(i < 2)
+            text("300",baskets[i].x,baskets[i].y);
+        else if(i < 4)
+            text("100",baskets[i].x,baskets[i].y);
+        else if(i < 6)
+            text("200",baskets[i].x,baskets[i].y);
+    }
     pop();
-
-    //Highlighting the body which the mouse is touching
-    if(mConstraint.body){
-        push();
-        fill(250,250,250,255);
-        ellipse(mConstraint.body.position.x,mConstraint.body.position.y,20,20);
-        pop();
+}
+function getCalculatedScore(){
+    for(i = 0; i < parts.length; i++){
+        if(parts[i].body.position.y > 600){
+            let pos = parts[i].body.position;
+            if(pos.x <= baskets[1].x+baskets[1].size/2)
+                score+=300;
+            else if(pos.x > baskets[1].x+baskets[1].size/2 && pos.x <= baskets[3].x+baskets[3].size/2)
+                score+=100;
+            else if(pos.x > baskets[3].x+baskets[3].size/2 && pos.x <= baskets[5].x+baskets[5].size/2)
+                score+=200;
+        }
     }
 }
 function mouseClicked(){
@@ -167,21 +144,23 @@ function mouseClicked(){
         restart();
     else if(mouseX < width-50 && mouseX > width-100 && mouseY < 50)
         pause();
+    else if(gameState == "play" && turns <= 5){
+        turns++;
+        parts.push(new Particles(mouseX,-10));
+    }
 }
 //Function to pause the game
 function pause(){
-    if(timerIncrease)
-        timerIncrease = false;
-    else
-        timerIncrease = true;
+    if(gameState != "pause")
+        gameState = "pause";
+    else if(gameState == "pause")
+        gameState = "play";
 }
 //Function to restart the game
 function restart(){
-    Timer = null;
-    timer = 0;
-    for(i = 0; i < baskets.length; i++)
-        baskets[i].circleAmt = 0;
+    turns = 0;
+    gameState = "play";
     for(j = 0; j < parts.length; j++)
         World.remove(engine.world, parts[j].body);
-    parts.splice(0,parts.length);
+    parts = [];
 }
